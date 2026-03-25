@@ -14,6 +14,7 @@ async function loadAllAdminComplaints() {
       tbody.innerHTML += `
         <tr ${rowClass}>
           <td>${c.complaintRef}</td>
+          <td><strong>${c.user ? c.user.name : 'Unknown User'}</strong><br/><small>${c.user ? c.user.email : ''}</small><br/><small>${c.user && c.user.phone ? c.user.phone : ''}</small></td>
           <td>${c.title}<br/><small>${c.locationName}</small></td>
           <td>${c.category}</td>
           <td><span class="badge badge-${c.status.toLowerCase().replace('_', '')}">${c.status}</span></td>
@@ -25,6 +26,13 @@ async function loadAllAdminComplaints() {
     });
   } catch(e) { console.error(e); }
 }
+
+// Auto-refresh the complaints list every 5 seconds for a dynamic live view
+setInterval(() => {
+  if (document.getElementById("update-modal").style.display !== "block") {
+    loadAllAdminComplaints();
+  }
+}, 5000);
 
 let activeComplaintId = null;
 

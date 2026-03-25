@@ -16,6 +16,7 @@ public class Complaint {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties({"password", "hibernateLazyInitializer", "handler"})
     private User user;
 
     @Column(nullable = false, length = 50)
