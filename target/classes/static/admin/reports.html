@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Reports - CivicPulse</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <style>
+    /* Layout */
+    .layout { display: flex; min-height: 100vh; }
+    .sidebar { width: 250px; background: var(--surface); border-right: 1px solid var(--border); padding: 20px; flex-shrink: 0; }
+    .main-content { flex: 1; padding: 20px; background: var(--background); overflow-y: auto;}
+    .sidebar a { display: block; padding: 12px; color: var(--text-secondary); text-decoration: none; border-radius: 8px; margin-bottom: 8px;}
+    .sidebar a:hover { background: var(--primary-light); color: var(--primary); }
+    .sidebar a.active { background: var(--primary); color: white; }
+    
+    /* Reports Styles */
+    .page-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem}
+    .page-title{font-size:20px;font-weight:500}
+    .page-sub{font-size:13px;color:var(--text-secondary);margin-top:3px}
+    .tab-row{display:flex;gap:0;border-bottom:0.5px solid var(--border);margin-bottom:1.5rem}
+    .tab{padding:10px 20px;font-size:13px;font-weight:500;color:var(--text-secondary);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-0.5px;transition:color 0.15s}
+    .tab.active{color:var(--primary);border-bottom-color:var(--primary)}
+    .metric-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:1.5rem}
+    .metric{background:var(--surface);border-radius:var(--radius);padding:1rem; border:0.5px solid var(--border);}
+    .metric-val{font-size:26px;font-weight:500;margin-bottom:2px}
+    .metric-lbl{font-size:12px;color:var(--text-secondary)}
+    .two-col{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem}
+    .three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-bottom:1rem}
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <div class="sidebar">
+      <h2 class="text-primary mb-4">Admin Portal</h2>
+      <a href="/admin/dashboard.html">Dashboard</a>
+      <a href="/admin/departments.html">Departments</a>
+      <a href="/admin/reports.html" class="active">Reports</a>
+      <a href="#" onclick="logout()" style="margin-top: auto; color: var(--danger);">Logout</a>
+    </div>
+
+    <div class="main-content">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Reports & analytics</div>
+          <div class="page-sub">Live performance insights directly from the database</div>
+        </div>
+      </div>
+
+      <div class="tab-row">
+        <div class="tab active">Overview</div>
+      </div>
+
+      <div id="tab-overview">
+        <div class="metric-grid">
+          <div class="metric">
+            <div class="metric-val" style="color:var(--primary)" id="m-total">0</div>
+            <div class="metric-lbl">Total complaints</div>
+          </div>
+          <div class="metric">
+            <div class="metric-val" style="color:var(--success)" id="m-res">0%</div>
+            <div class="metric-lbl">Resolution rate</div>
+          </div>
+          <div class="metric">
+            <div class="metric-val" style="color:var(--warning)" id="m-prog">0</div>
+            <div class="metric-lbl">In Progress</div>
+          </div>
+          <div class="metric">
+            <div class="metric-val" style="color:var(--danger)" id="m-sub">0</div>
+            <div class="metric-lbl">Awaiting Assignment</div>
+          </div>
+        </div>
+
+        <div class="three-col">
+          <div class="card">
+            <h3 style="margin-bottom:12px; font-size:15px;">Resolution by status</h3>
+            <div style="display:flex;flex-direction:column;gap:10px" id="status-bars">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+
+          <div class="card">
+            <h3 style="margin-bottom:12px; font-size:15px;">Complaints by Category</h3>
+            <div style="display:flex;flex-direction:column;gap:10px" id="category-bars">
+               <!-- Rendered via JS -->
+            </div>
+          </div>
+          
+          <div class="card">
+            <h3 style="margin-bottom:12px; font-size:15px;">Top Locations</h3>
+            <div style="display:flex;flex-direction:column;gap:10px" id="location-bars">
+               <!-- Rendered via JS -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
+  <script>
+    requireAuth();
+    
+    async function loadReports() {
+      try {
+        const complaints = await apiGet("/api/complaints/admin/all");
+        
+        let total = complaints.length;
+        if(total === 0) return;
+        
+        let resolved = 0;
+        let inProgress = 0;
+        let submitted = 0;
+        let assigned = 0;
+        
+        const categories = {};
+        const locations = {};
+        
+        complaints.forEach(c => {
+          if(c.status === 'RESOLVED') resolved++;
+          if(c.status === 'IN_PROGRESS') inProgress++;
+          if(c.status === 'SUBMITTED') submitted++;
+          if(c.status === 'ASSIGNED') assigned++;
+          
+          categories[c.category] = (categories[c.category] || 0) + 1;
+          locations[c.locationName] = (locations[c.locationName] || 0) + 1;
+        });
+        
+        document.getElementById('m-total').innerText = total;
+        document.getElementById('m-res').innerText = Math.round((resolved / total) * 100) + '%';
+        document.getElementById('m-prog').innerText = inProgress;
+        document.getElementById('m-sub').innerText = submitted;
+        
+        // Render Status Bars
+        document.getElementById('status-bars').innerHTML = `
+          ${renderBarRow('Resolved', resolved, total, '#1D9E75')}
+          ${renderBarRow('In Progress', inProgress, total, '#EF9F27')}
+          ${renderBarRow('Assigned', assigned, total, '#378ADD')}
+          ${renderBarRow('Submitted', submitted, total, '#888780')}
+        `;
+        
+        // Render Category Bars
+        let catHtml = '';
+        Object.entries(categories).sort((a,b)=>b[1]-a[1]).forEach(entry => {
+           catHtml += renderBarRow(entry[0], entry[1], total, 'var(--primary)');
+        });
+        document.getElementById('category-bars').innerHTML = catHtml;
+        
+        // Render Location Bars
+        let locHtml = '';
+        Object.entries(locations).sort((a,b)=>b[1]-a[1]).slice(0, 5).forEach(entry => {
+           locHtml += renderBarRow(entry[0], entry[1], total, 'var(--secondary)');
+        });
+        document.getElementById('location-bars').innerHTML = locHtml;
+
+      } catch(e) {
+        console.error("Failed to load reports", e);
+      }
+    }
+    
+    function renderBarRow(label, value, total, color) {
+      const pct = total > 0 ? Math.round((value / total) * 100) : 0;
+      return `
+        <div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+            <span>${label}</span><span style="font-weight:500">${value}</span>
+          </div>
+          <div style="height:6px;background:var(--border);border-radius:3px;overflow:hidden">
+            <div style="height:100%;width:${pct}%;background:${color};border-radius:3px"></div>
+          </div>
+        </div>
+      `;
+    }
+
+    loadReports();
+    setInterval(loadReports, 5000);
+  </script>
+</body>
+</html>

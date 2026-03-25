@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Departments - CivicPulse</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <style>
+    /* Layout */
+    .layout { display: flex; min-height: 100vh; }
+    .sidebar { width: 250px; background: var(--surface); border-right: 1px solid var(--border); padding: 20px; flex-shrink:0;}
+    .main-content { flex: 1; padding: 20px; background: var(--background); overflow-y:auto;}
+    .sidebar a { display: block; padding: 12px; color: var(--text-secondary); text-decoration: none; border-radius: 8px; margin-bottom: 8px;}
+    .sidebar a:hover { background: var(--primary-light); color: var(--primary); }
+    .sidebar a.active { background: var(--primary); color: white; }
+    
+    .dept-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:1.5rem}
+    .dept-card{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius);padding:1rem;}
+    .dept-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
+    .dept-name{font-size:16px;font-weight:500; color: var(--primary)}
+    .dept-stat{font-size:24px;font-weight:500;margin-bottom:2px}
+    .dept-stat-lbl{font-size:11px;color:var(--text-secondary);margin-bottom:8px}
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <div class="sidebar">
+      <h2 class="text-primary mb-4">Admin Portal</h2>
+      <a href="/admin/dashboard.html">Dashboard</a>
+      <a href="/admin/departments.html" class="active">Departments</a>
+      <a href="/admin/reports.html">Reports</a>
+      <a href="#" onclick="logout()" style="margin-top: auto; color: var(--danger);">Logout</a>
+    </div>
+
+    <div class="main-content">
+      <div class="d-flex justify-between align-center mb-4">
+        <div>
+          <h2 style="font-size:20px;">Departments Workload</h2>
+          <div style="font-size:13px;color:var(--text-secondary);margin-top:3px;">Live active complaint assignments by category/department</div>
+        </div>
+      </div>
+
+      <div class="dept-grid" id="depts-container">
+        <!-- Rendered via JS -->
+      </div>
+      
+      <div class="card mt-4">
+         <h3>Department Status Summary</h3>
+         <p class="text-secondary mt-2">Currently, officer assignments are handled externally. The system routes complaints by category to predefined municipal departments automatically.</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
+  <script>
+    requireAuth();
+    
+    // Using Categories as proxy for Departments since DB has Categories
+    const DEPARTMENTS = ['Roads', 'Water & Sanitation', 'Waste Management', 'Electrical', 'Parks', 'Others'];
+    
+    async function loadDepts() {
+      try {
+        const complaints = await apiGet("/api/complaints/admin/all");
+        const activeByDept = {};
+        
+        DEPARTMENTS.forEach(d => activeByDept[d] = 0);
+        
+        complaints.forEach(c => {
+          if (c.status !== 'RESOLVED') {
+            let dept = 'Others';
+            if (c.category.toLowerCase().includes('road') || c.category.toLowerCase().includes('pothole')) dept = 'Roads';
+            else if (c.category.toLowerCase().includes('water') || c.category.toLowerCase().includes('pipe')) dept = 'Water & Sanitation';
+            else if (c.category.toLowerCase().includes('waste') || c.category.toLowerCase().includes('garbage')) dept = 'Waste Management';
+            else if (c.category.toLowerCase().includes('electric') || c.category.toLowerCase().includes('light')) dept = 'Electrical';
+            else if (c.category.toLowerCase().includes('park') || c.category.toLowerCase().includes('tree')) dept = 'Parks';
+            else dept = c.category; // fallback
+            
+            activeByDept[dept] = (activeByDept[dept] || 0) + 1;
+          }
+        });
+        
+        let html = '';
+        Object.entries(activeByDept).forEach(([dept, count]) => {
+          html += `
+            <div class="dept-card">
+              <div class="dept-header">
+                <div>
+                  <div class="dept-name">${dept}</div>
+                </div>
+              </div>
+              <div class="dept-stat">${count}</div>
+              <div class="dept-stat-lbl">Active & Open Complaints</div>
+            </div>
+          `;
+        });
+        
+        document.getElementById('depts-container').innerHTML = html;
+
+      } catch(e) {
+        console.error("Failed to load departments", e);
+      }
+    }
+
+    loadDepts();
+    setInterval(loadDepts, 5000);
+  </script>
+</body>
+</html>
