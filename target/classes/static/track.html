@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Track Complaints - CivicPulse</title>
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+  <nav class="navbar">
+    <a href="/home.html" class="navbar-brand">CivicPulse</a>
+    <div class="navbar-links">
+      <a href="/home.html">Back</a>
+    </div>
+  </nav>
+
+  <div class="container mt-4">
+    <h3 class="mb-4">My Complaints</h3>
+    <div id="complaints-list"></div>
+    
+    <!-- Detail View (Hidden by default) -->
+    <div id="complaint-detail" style="display:none;" class="card">
+      <div class="d-flex justify-between align-center mb-4">
+        <h3 id="det-title"></h3>
+        <span id="det-status" class="badge"></span>
+      </div>
+      <p><strong>Ref:</strong> <span id="det-ref"></span></p>
+      <p><strong>Category:</strong> <span id="det-cat"></span></p>
+      <p><strong>Location:</strong> <span id="det-loc"></span></p>
+      <p class="mt-4"><strong>Description:</strong> <br/><span id="det-desc"></span></p>
+      
+      <h4 class="mt-4 mb-4">Timeline</h4>
+      <div id="det-timeline"></div>
+      
+      <button class="btn-secondary mt-4" onclick="closeDetail()">Close</button>
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
+  <script src="/js/citizen.js"></script>
+  <script>
+    requireAuth();
+    
+    const urlParams = new URLSearchParams(window.location.search);
+    const id = urlParams.get('id');
+    
+    if(id) {
+      document.getElementById('complaints-list').style.display = 'none';
+      loadSingleComplaint(id);
+    } else {
+      loadAllComplaints();
+    }
+    
+    function closeDetail() {
+      window.location.href = "/track.html";
+    }
+
+    async function loadSingleComplaint(id) {
+      try {
+        const res = await apiGet(`/api/complaints/${id}`);
+        const c = res.complaint;
+        const t = res.timeline;
+        
+        document.getElementById('complaint-detail').style.display = 'block';
+        document.getElementById('det-title').innerText = c.title;
+        document.getElementById('det-status').innerText = c.status;
+        document.getElementById('det-status').className = `badge badge-${c.status.toLowerCase().replace('_', '')}`;
+        document.getElementById('det-ref').innerText = c.complaintRef;
+        document.getElementById('det-cat').innerText = c.category;
+        document.getElementById('det-loc').innerText = c.locationName;
+        document.getElementById('det-desc').innerText = c.description || 'No description provided';
+        
+        const tDiv = document.getElementById('det-timeline');
+        tDiv.innerHTML = '';
+        t.forEach(entry => {
+          tDiv.innerHTML += `
+            <div style="border-left: 2px solid var(--border); padding-left: 16px; margin-bottom: 16px;">
+              <strong>${entry.status}</strong> - <small>${new Date(entry.createdAt).toLocaleString()}</small>
+              <p>${entry.note || ''}</p>
+              <small>By: ${entry.updatedBy}</small>
+            </div>
+          `;
+        });
+        
+      } catch(e) {
+        alert("Error loading complaint details");
+        closeDetail();
+      }
+    }
+  </script>
+</body>
+</html>

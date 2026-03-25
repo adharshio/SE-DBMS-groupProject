@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Submit Complaint - CivicPulse</title>
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+  <nav class="navbar">
+    <a href="/home.html" class="navbar-brand">CivicPulse</a>
+    <div class="navbar-links">
+      <a href="/home.html">Back</a>
+    </div>
+  </nav>
+
+  <div class="container mt-4">
+    <div id="success-screen" class="card text-center" style="display:none; padding: 40px;">
+      <h2 style="color: var(--success); margin-bottom: 16px;">Success!</h2>
+      <p>Your reference number is:</p>
+      <h3 id="ref-number" class="mt-4 mb-4" style="font-size: 24px;"></h3>
+      <a href="/home.html" class="btn-primary" style="text-decoration: none; display: inline-block;">Back to Home</a>
+    </div>
+
+    <form id="submit-form" onsubmit="submitComplaint(event)" class="card">
+      <h3 class="mb-4">Submit Complaint</h3>
+      <label>Category</label>
+      <input type="text" name="category" id="cat-input" class="form-input" required>
+      
+      <label>Title</label>
+      <input type="text" name="title" class="form-input" required>
+      
+      <label>Description</label>
+      <textarea name="description" class="form-input" rows="4"></textarea>
+      
+      <label>Location Name</label>
+      <input type="text" name="locationName" id="locationName" class="form-input" required>
+      
+      <input type="hidden" name="latitude" id="latitude">
+      <input type="hidden" name="longitude" id="longitude">
+      <button type="button" class="btn-secondary mb-4" onclick="detectLocation()">Detect GPS Location</button>
+      
+      <label>Photo Evidence</label>
+      <input type="file" name="image" class="form-input" accept="image/*">
+      
+      <button type="submit" id="submit-btn" class="btn-primary mt-4">Submit</button>
+    </form>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
+  <script src="/js/citizen.js"></script>
+  <script>
+    requireAuth();
+    const urlParams = new URLSearchParams(window.location.search);
+    const cat = urlParams.get('category');
+    if(cat) document.getElementById('cat-input').value = cat;
+  </script>
+</body>
+</html>

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Dashboard - CivicPulse</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <style>
+    .layout { display: flex; min-height: 100vh; }
+    .sidebar { width: 250px; background: var(--surface); border-right: 1px solid var(--border); padding: 20px; }
+    .main-content { flex: 1; padding: 20px; background: var(--background); }
+    .sidebar a { display: block; padding: 12px; color: var(--text-secondary); text-decoration: none; border-radius: 8px; margin-bottom: 8px;}
+    .sidebar a:hover { background: var(--primary-light); color: var(--primary); }
+    .sidebar a.active { background: var(--primary); color: white; }
+    table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden;}
+    th, td { padding: 16px; text-align: left; border-bottom: 1px solid var(--border); }
+    th { background: var(--surface-2); font-weight: 600; color: var(--text-secondary); }
+    
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 100; }
+    .modal-content { background: white; width: 500px; margin: 100px auto; padding: 30px; border-radius: var(--radius); }
+  </style>
+</head>
+<body>
+  
+  <div class="layout">
+    <div class="sidebar">
+      <h2 class="text-primary mb-4">Admin Portal</h2>
+      <a href="/admin/dashboard.html" class="active">Dashboard</a>
+      <a href="#">Departments</a>
+      <a href="#">Reports</a>
+      <a href="#" onclick="logout()" style="margin-top: auto; color: var(--danger);">Logout</a>
+    </div>
+
+    <div class="main-content">
+      <div class="d-flex justify-between align-center mb-4">
+        <h2>Dashboard Overview</h2>
+        <span id="admin-name" style="font-weight: 600;"></span>
+      </div>
+
+      <div class="d-flex justify-between mt-4 mb-4">
+        <div class="card" style="flex: 1; margin: 0 8px; text-align: center;">
+          <h2 id="stat-total">0</h2><p>Total Complaints</p>
+        </div>
+        <div class="card" style="flex: 1; margin: 0 8px; text-align: center;">
+          <h2 id="stat-progress">0</h2><p>In Progress</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 class="mb-4">All Complaints</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Issue & Location</th>
+              <th>Category</th>
+              <th>Status</th>
+              <th>Priority</th>
+              <th>Assigned To</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="admin-complaints-body">
+            <!-- Rendered via JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Update Status Modal -->
+  <div id="update-modal" class="modal">
+    <div class="modal-content">
+      <h3>Update Complaint Status</h3>
+      <div class="mt-4">
+        <label>Status</label>
+        <select id="status-select" class="form-input">
+          <option value="SUBMITTED">Submitted</option>
+          <option value="ASSIGNED">Assigned</option>
+          <option value="IN_PROGRESS">In Progress</option>
+          <option value="RESOLVED">Resolved</option>
+        </select>
+        
+        <label>Note to Citizen</label>
+        <textarea id="note-input" class="form-input" rows="3" placeholder="Explain the update..."></textarea>
+      </div>
+      <div class="d-flex justify-between mt-4">
+        <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+        <button class="btn-primary" style="width: auto;" onclick="updateStatus()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
+  <script src="/js/admin.js"></script>
+  <script>
+    requireAuth();
+    const u = getCurrentUser();
+    if(u) document.getElementById("admin-name").innerText = u.name;
+    loadAllAdminComplaints();
+  </script>
+</body>
+</html>

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Portal - CivicPulse</title>
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+  <!-- Same as citizen login but redirects to dashboard.html -->
+  <div class="container mt-4">
+    <div class="card" style="max-width: 400px; margin: auto;">
+      <h2 class="text-center mb-4 text-primary">Admin Portal</h2>
+      
+      <div id="login-form">
+        <div id="login-error" class="error-message">Invalid credentials</div>
+        <input type="email" id="login-email" class="form-input" placeholder="Admin Email">
+        <input type="password" id="login-pwd" class="form-input" placeholder="Password">
+        <button class="btn-primary" onclick="doAdminLogin()">Sign In</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script>
+    if(getToken()) window.location.href = "/admin/dashboard.html";
+
+    async function doAdminLogin() {
+      const e = document.getElementById("login-email").value;
+      const p = document.getElementById("login-pwd").value;
+      try {
+        const data = await apiPost("/api/auth/login", { email: e, password: p });
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("user", JSON.stringify({id: data.id, name: data.name, email: data.email}));
+        window.location.href = "/admin/dashboard.html";
+      } catch(err) {
+        document.getElementById("login-error").style.display = "block";
+      }
+    }
+  </script>
+</body>
+</html>

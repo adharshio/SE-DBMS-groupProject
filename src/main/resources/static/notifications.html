@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Notifications - CivicPulse</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <style>
+    .notif-card { transition: background 0.2s; }
+    .unread { border-left: 4px solid var(--primary); background: var(--surface-2); }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="/home.html" class="navbar-brand">CivicPulse</a>
+    <div class="navbar-links">
+      <a href="/home.html">Back</a>
+    </div>
+  </nav>
+
+  <div class="container mt-4">
+    <div class="d-flex justify-between align-center mb-4">
+      <h3>Notifications</h3>
+      <button class="btn-secondary" onclick="markAllRead()">Mark all as read</button>
+    </div>
+    <div id="notif-list"></div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
+  <script src="/js/citizen.js"></script>
+  <script>
+    requireAuth();
+    loadNotifications();
+
+    async function loadNotifications() {
+      try {
+        const list = await apiGet("/api/notifications");
+        const container = document.getElementById("notif-list");
+        container.innerHTML = "";
+        if(list.length === 0) {
+          container.innerHTML = "<p>No notifications.</p>";
+          return;
+        }
+        list.forEach(n => {
+          container.innerHTML += `
+            <div class="card notif-card ${n.isRead ? '' : 'unread'}" onclick="markRead(${n.id}, this)">
+              <h4>${n.title}</h4>
+              <p>${n.body}</p>
+              <small>${new Date(n.createdAt).toLocaleString()}</small>
+            </div>
+          `;
+        });
+      } catch(e) {}
+    }
+
+    async function markRead(id, el) {
+      if(!el.classList.contains('unread')) return;
+      try {
+        await apiPut(`/api/notifications/${id}/read`, {});
+        el.classList.remove('unread');
+      } catch(e) {}
+    }
+
+    async function markAllRead() {
+      try {
+        await apiPut("/api/notifications/read-all", {});
+        loadNotifications();
+      } catch(e) {}
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>CivicPulse - Citizen Portal</title>
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+  <div class="container mt-4">
+    <div class="card" style="max-width: 400px; margin: auto;">
+      <h2 class="text-center mb-4 text-primary">CivicPulse</h2>
+      
+      <div id="login-form">
+        <h3>Login</h3>
+        <div id="login-error" class="error-message">Invalid credentials</div>
+        <input type="email" id="login-email" class="form-input" placeholder="Email">
+        <input type="password" id="login-pwd" class="form-input" placeholder="Password">
+        <button class="btn-primary" onclick="doLogin()">Sign In</button>
+        <p class="text-center mt-4"><a href="#" onclick="toggleMode('register')">Create an account</a></p>
+      </div>
+
+      <div id="register-form" style="display: none;">
+        <h3>Register</h3>
+        <div id="register-error" class="error-message">Error registering</div>
+        <input type="text" id="reg-name" class="form-input" placeholder="Full Name">
+        <input type="email" id="reg-email" class="form-input" placeholder="Email">
+        <input type="text" id="reg-phone" class="form-input" placeholder="Phone Number">
+        <input type="password" id="reg-pwd" class="form-input" placeholder="Password">
+        <button class="btn-primary" onclick="doRegister()">Sign Up</button>
+        <p class="text-center mt-4"><a href="#" onclick="toggleMode('login')">Already have an account? Login</a></p>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
+  <script>
+    if(getToken()) window.location.href = "/home.html";
+
+    function toggleMode(mode) {
+      document.getElementById("login-form").style.display = mode === 'login' ? 'block' : 'none';
+      document.getElementById("register-form").style.display = mode === 'register' ? 'block' : 'none';
+    }
+
+    async function doLogin() {
+      const e = document.getElementById("login-email").value;
+      const p = document.getElementById("login-pwd").value;
+      try {
+        await login(e, p);
+      } catch(err) {
+        document.getElementById("login-error").style.display = "block";
+      }
+    }
+
+    async function doRegister() {
+      const n = document.getElementById("reg-name").value;
+      const e = document.getElementById("reg-email").value;
+      const po = document.getElementById("reg-phone").value;
+      const p = document.getElementById("reg-pwd").value;
+      try {
+        await register(n, e, p, po);
+      } catch(err) {
+        document.getElementById("register-error").style.display = "block";
+      }
+    }
+  </script>
+</body>
+</html>

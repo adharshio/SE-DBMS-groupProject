@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Home - CivicPulse</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <style>
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 16px; margin: 20px 0;}
+    .cat-card { text-align: center; padding: 20px 10px; cursor: pointer; transition: transform 0.2s;}
+    .cat-card:hover { transform: translateY(-5px); border-color: var(--primary);}
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="/home.html" class="navbar-brand">CivicPulse</a>
+    <div class="navbar-links d-flex align-center">
+      <span style="margin-right: 16px; font-weight: bold;">Hi, <span id="user-name"></span></span>
+      <a href="/track.html">Track</a>
+      <a href="/notifications.html">Notifications <span id="nav-notif-badge" class="badge badge-submitted" style="display:none; margin-left:4px;">0</span></a>
+      <a href="#" onclick="logout()">Logout</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="d-flex justify-between mt-4">
+      <div class="card" style="flex: 1; margin: 0 8px; text-align: center;">
+        <h2 id="total-submitted">0</h2><p>Total</p>
+      </div>
+      <div class="card" style="flex: 1; margin: 0 8px; text-align: center;">
+        <h2 id="in-progress">0</h2><p>In Progress</p>
+      </div>
+      <div class="card" style="flex: 1; margin: 0 8px; text-align: center;">
+        <h2 id="resolved">0</h2><p>Resolved</p>
+      </div>
+    </div>
+
+    <h3 class="mt-4">New Complaint</h3>
+    <div class="grid">
+      <div class="card cat-card" onclick="window.location.href='/submit.html?category=Roads'">Roads</div>
+      <div class="card cat-card" onclick="window.location.href='/submit.html?category=Water'">Water</div>
+      <div class="card cat-card" onclick="window.location.href='/submit.html?category=Waste'">Waste</div>
+      <div class="card cat-card" onclick="window.location.href='/submit.html?category=Streetlights'">Streetlights</div>
+      <div class="card cat-card" onclick="window.location.href='/submit.html?category=Others'">Others</div>
+    </div>
+
+    <div class="d-flex justify-between align-center mt-4">
+      <h3>Recent Complaints</h3>
+      <a href="/track.html">See all</a>
+    </div>
+    <div id="recent-list" class="mt-4"></div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
+  <script src="/js/citizen.js"></script>
+  <script>
+    requireAuth();
+    loadStats();
+    loadRecentComplaints();
+  </script>
+</body>
+</html>
